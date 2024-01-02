@@ -7,6 +7,7 @@ pub struct Editor {
     terminal: Terminal,
 }
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 impl Editor {
     pub fn run(&mut self) {
         loop {
@@ -52,9 +53,14 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
-        for _ in 0..self.terminal.size().height - 1 {
+        let height = self.terminal.size().height;
+        for row in 0..height - 1 {
             Terminal::clear_current_line();
-            println!("~\r");
+            if row == height / 3 {
+                println!("Led editor - version {}\r", VERSION);
+            } else {
+                println!("~\r");
+            }
         }
     }
 }
