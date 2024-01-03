@@ -125,12 +125,16 @@ impl Editor {
             Terminal::clear_current_line();
             if let Some(row) = self.document.row(term_row as usize) {
                 self.draw_row(row);
-            } else if term_row == height / 3 {
+            } else if self.should_say_welcome(term_row, height) {
                 self.draw_welcome_message();
             } else {
                 println!("~\r");
             }
         }
+    }
+
+    fn should_say_welcome(&self, term_row: u16, height: u16) -> bool {
+        self.document.is_empty() && term_row == height / 3
     }
 }
 
