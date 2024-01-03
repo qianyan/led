@@ -1,3 +1,5 @@
+use std::{fs, io::Error};
+
 use crate::Row;
 
 #[derive(Default)]
@@ -10,6 +12,12 @@ impl Document {
         let mut rows = Vec::new();
         rows.push(Row::from("Hello, World!"));
         Self { rows }
+    }
+
+    pub fn open_file(filename: &str) -> Result<Self, Error> {
+        let contents = fs::read_to_string(filename)?;
+        let rows = contents.lines().map(Row::from).collect();
+        Ok(Self { rows })
     }
 
     pub fn row(&self, index: usize) -> Option<&Row> {
