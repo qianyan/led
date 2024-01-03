@@ -1,6 +1,6 @@
-use termion::event::Key;
-
+use crate::Document;
 use crate::Terminal;
+use termion::event::Key;
 
 pub struct Position {
     pub x: usize,
@@ -11,6 +11,7 @@ pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
     cursor_position: Position,
+    document: Document,
 }
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -32,6 +33,7 @@ impl Editor {
         Self {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to initialize terminal"),
+            document: Document::default(),
             cursor_position: Position { x: 0, y: 0 },
         }
     }
