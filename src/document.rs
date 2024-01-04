@@ -5,6 +5,7 @@ use crate::Row;
 #[derive(Default)]
 pub struct Document {
     rows: Vec<Row>,
+    pub file_name: Option<String>,
 }
 
 impl Document {
@@ -12,7 +13,10 @@ impl Document {
     pub fn open(filename: &str) -> Result<Self, Error> {
         let contents = fs::read_to_string(filename)?;
         let rows = contents.lines().map(Row::from).collect();
-        Ok(Self { rows })
+        Ok(Self {
+            rows,
+            file_name: Some(filename.to_string()),
+        })
     }
 
     pub fn row(&self, index: usize) -> Option<&Row> {

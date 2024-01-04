@@ -47,6 +47,14 @@ impl Terminal {
         print!("{}", color::Bg(color::Reset));
     }
 
+    pub fn set_fg_color(color: color::Rgb) {
+        print!("{}", color::Fg(color))
+    }
+
+    pub fn reset_fg_color() {
+        print!("{}", color::Fg(color::Reset))
+    }
+
     pub fn cursor_position(position: &Position) {
         let Position { x, y } = position;
         let x = x.saturating_add(1);
