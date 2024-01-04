@@ -3,6 +3,7 @@ use std::env;
 use crate::Document;
 use crate::Row;
 use crate::Terminal;
+use termion::color;
 use termion::event::Key;
 
 #[derive(Default)]
@@ -19,6 +20,7 @@ pub struct Editor {
     document: Document,
 }
 
+const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 impl Editor {
     pub fn run(&mut self) {
@@ -60,6 +62,7 @@ impl Editor {
             println!("Goodbye.\r");
         } else {
             self.draw_rows();
+            self.draw_status_bar();
             Terminal::cursor_position(&Position {
                 x: self.cursor_position.x.saturating_sub(self.offset.x),
                 y: self.cursor_position.y.saturating_sub(self.offset.y),
@@ -67,6 +70,13 @@ impl Editor {
         }
         Terminal::cursor_show();
         Terminal::flush()
+    }
+
+    fn draw_status_bar(&self) {
+        let spaces = " ".repeat(self.terminal.size().width as usize);
+        Terminal::set_bg_color(STATUS_BG_COLOR);
+        print!("{}\r", spaces);
+        Terminal::reset_bg_color();
     }
 
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
@@ -180,7 +190,7 @@ impl Editor {
 
     fn draw_rows(&self) {
         let height = self.terminal.size().height;
-        for term_row in 0..height - 1 {
+        for term_row in 0..height {
             Terminal::clear_current_line();
             if let Some(row) = self.document.row(term_row as usize + self.offset.y) {
                 self.draw_row(row);
