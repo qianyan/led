@@ -73,7 +73,7 @@ impl Editor {
         Self {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to initialize terminal"),
-            document: document,
+            document,
             cursor_position: Position::default(),
             offset: Position::default(),
             status_message: StatusMessage::from(initial_status),
