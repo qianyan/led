@@ -8,6 +8,7 @@ pub struct Document {
 }
 
 impl Document {
+    /// # Errors
     pub fn open(filename: &str) -> Result<Self, Error> {
         let contents = fs::read_to_string(filename)?;
         let rows = contents.lines().map(Row::from).collect();
