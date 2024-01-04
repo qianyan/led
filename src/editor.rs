@@ -147,7 +147,9 @@ impl Editor {
             | Key::PageUp
             | Key::PageDown
             | Key::Home
-            | Key::End => self.move_cursor(pressed_key),
+            | Key::Ctrl('a')
+            | Key::End
+            | Key::Ctrl('e') => self.move_cursor(pressed_key),
             _ => (),
         }
         self.scroll();
@@ -209,8 +211,8 @@ impl Editor {
                     height
                 }
             }
-            Key::Home => x = 0,
-            Key::End => x = width,
+            Key::Home | Key::Ctrl('a') => x = 0,
+            Key::End | Key::Ctrl('e') => x = width,
             _ => (),
         }
 
