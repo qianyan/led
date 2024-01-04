@@ -1,4 +1,6 @@
 use std::env;
+use std::time::Duration;
+use std::time::Instant;
 
 use crate::Document;
 use crate::Row;
@@ -12,12 +14,27 @@ pub struct Position {
     pub y: usize,
 }
 
+struct StatusMessage {
+    text: String,
+    time: Instant,
+}
+
+impl StatusMessage {
+    fn from(message: String) -> Self {
+        Self {
+            time: Instant::now(),
+            text: message,
+        }
+    }
+}
+
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
     cursor_position: Position,
     offset: Position,
     document: Document,
+    status_message: StatusMessage,
 }
 
 const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
@@ -39,9 +56,16 @@ impl Editor {
     }
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
+        let mut initial_status = String::from("HELP: Ctrl-Q = quit");
         let document = if args.len() > 1 {
             let file_name = &args[1];
-            Document::open(&file_name).unwrap_or_default()
+            let doc = Document::open(&file_name);
+            if doc.is_ok() {
+                doc.unwrap()
+            } else {
+                initial_status = format!("ERR: Could not open file: {}", file_name);
+                Document::default()
+            }
         } else {
             Document::default()
         };
@@ -52,6 +76,7 @@ impl Editor {
             document: document,
             cursor_position: Position::default(),
             offset: Position::default(),
+            status_message: StatusMessage::from(initial_status),
         }
     }
 
@@ -64,6 +89,7 @@ impl Editor {
         } else {
             self.draw_rows();
             self.draw_status_bar();
+            self.draw_message_bar();
             Terminal::cursor_position(&Position {
                 x: self.cursor_position.x.saturating_sub(self.offset.x),
                 y: self.cursor_position.y.saturating_sub(self.offset.y),
@@ -95,9 +121,19 @@ impl Editor {
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
         Terminal::set_fg_color(STATUS_FG_COLOR);
-        print!("{}\r", status);
+        println!("{}\r", status);
         Terminal::reset_fg_color();
         Terminal::reset_bg_color();
+    }
+
+    fn draw_message_bar(&self) {
+        Terminal::clear_current_line();
+        let message = &self.status_message;
+        if Instant::now() - message.time < Duration::new(5, 0) {
+            let mut text = message.text.clone();
+            text.truncate(self.terminal.size().width as usize);
+            print!("{}", text);
+        }
     }
 
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
