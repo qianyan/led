@@ -26,6 +26,7 @@ impl Row {
             .graphemes(true)
             .skip(start)
             .take(end - start)
+            .map(|grapheme| if grapheme == "\t" { " " } else { grapheme })
             .collect()
     }
 
