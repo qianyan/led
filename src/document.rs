@@ -32,6 +32,11 @@ impl Document {
     }
 
     pub fn insert(&mut self, at: &Position, c: char) {
+        if c == '\n' {
+            self.insert_newline(at);
+            return;
+        }
+
         if at.y == self.len() {
             let mut row = Row::default();
             row.insert(0, c);
@@ -39,6 +44,19 @@ impl Document {
         } else if at.y < self.len() {
             let row = self.rows.get_mut(at.y).unwrap();
             row.insert(at.x, c);
+        }
+    }
+
+    fn insert_newline(&mut self, at: &Position) {
+        // todo()
+        if at.y > self.len() {
+            return;
+        }
+        let new_row = Row::default();
+        if at.y == self.len() || at.y.saturating_add(1) == self.len() {
+            self.rows.push(new_row);
+        } else {
+            self.rows.insert(at.y + 1, new_row);
         }
     }
 
