@@ -23,6 +23,7 @@ impl Row {
     pub fn render(&self, start: usize, end: usize) -> String {
         let end = cmp::min(end, self.string.len());
         let start = cmp::min(start, end);
+        #[allow(clippy::arithmetic_side_effects)]
         self.string[..]
             .graphemes(true)
             .skip(start)
@@ -56,15 +57,15 @@ impl Row {
         self.update_len();
     }
 
+    #[allow(clippy::arithmetic_side_effects)]
     pub fn delete(&mut self, at: usize) {
         if at > self.len() {
             return;
-        } else {
-            let mut result: String = self.string[..].graphemes(true).take(at).collect();
-            let remainer: String = self.string[..].graphemes(true).skip(at + 1).collect();
-            result.push_str(&remainer);
-            self.string = result;
         }
+        let mut result: String = self.string[..].graphemes(true).take(at).collect();
+        let remainer: String = self.string[..].graphemes(true).skip(at + 1).collect();
+        result.push_str(&remainer);
+        self.string = result;
         self.update_len();
     }
 

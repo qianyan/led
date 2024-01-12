@@ -59,11 +59,11 @@ impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
         let mut initial_status = String::from("HELP: Ctrl-S = save | Ctrl-Q = quit");
-        let document = if args.len() > 1 {
-            let file_name = &args[1];
-            let doc = Document::open(&file_name);
-            if doc.is_ok() {
-                doc.unwrap()
+        // let document = if args.len() > 1 {
+        let document = if let Some(file_name) = args.get(1) {
+            let doc = Document::open(file_name);
+            if let Ok(doc) = doc {
+                doc
             } else {
                 initial_status = format!("ERR: Could not open file: {}", file_name);
                 Document::default()
@@ -126,10 +126,9 @@ impl Editor {
             self.cursor_position.y.saturating_add(1),
             self.document.len()
         );
+        #[allow(clippy::arithmetic_side_effects)]
         let len = status.len() + line_indicator.len();
-        if width > len {
-            status.push_str(&" ".repeat(width - len))
-        }
+        status.push_str(&" ".repeat(width.saturating_sub(len)));
         status = format!("{}{}", status, line_indicator);
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
@@ -182,9 +181,8 @@ impl Editor {
             | Key::PageUp
             | Key::PageDown
             | Key::Home
-            | Key::Ctrl('a')
-            | Key::End
-            | Key::Ctrl('e') => self.move_cursor(pressed_key),
+            | Key::Ctrl('a' | 'e')
+            | Key::End => self.move_cursor(pressed_key),
             _ => (),
         }
         self.scroll();
@@ -198,11 +196,7 @@ impl Editor {
             self.refresh_screen()?;
 
             match Terminal::read_key()? {
-                Key::Backspace => {
-                    if !result.is_empty() {
-                        result.truncate(result.len() - 1);
-                    }
-                }
+                Key::Backspace => result.truncate(result.len().saturating_sub(1)),
                 Key::Char('\n') => break,
                 Key::Char(c) => {
                     if !c.is_control() {
@@ -297,14 +291,14 @@ impl Editor {
             }
             Key::PageUp => {
                 y = if y > terminal_height {
-                    y - terminal_height
+                    y.saturating_sub(terminal_height)
                 } else {
                     0
                 }
             }
             Key::PageDown => {
                 y = if y.saturating_add(terminal_height) < height {
-                    y + terminal_height as usize
+                    y.saturating_add(terminal_height)
                 } else {
                     height
                 }
@@ -340,7 +334,7 @@ impl Editor {
 
     fn draw_row(&self, row: &Row) {
         let start = self.offset.x;
-        let end = start + self.terminal.size().width as usize;
+        let end = start.saturating_add(self.terminal.size().width as usize);
         let row = row.render(start, end);
         println!("{}\r", row);
     }
@@ -349,7 +343,10 @@ impl Editor {
         let height = self.terminal.size().height;
         for term_row in 0..height {
             Terminal::clear_current_line();
-            if let Some(row) = self.document.row(term_row as usize + self.offset.y) {
+            if let Some(row) = self
+                .document
+                .row(self.offset.y.saturating_add(term_row as usize))
+            {
                 self.draw_row(row);
             } else if self.should_say_welcome(term_row, height) {
                 self.draw_welcome_message();
@@ -359,6 +356,7 @@ impl Editor {
         }
     }
 
+    #[allow(clippy::integer_division)]
     fn should_say_welcome(&self, term_row: u16, height: u16) -> bool {
         self.document.is_empty() && term_row == height / 3
     }

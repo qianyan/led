@@ -1,7 +1,9 @@
-use std::io::{stdin, stdout, Write};
+use std::io::{stdin, stdout, Error, Stdout, Write};
 
 use termion::{
+    clear::{All, CurrentLine},
     color,
+    cursor::{Goto, Hide, Show},
     event::Key,
     input::TermRead,
     raw::{IntoRawMode, RawTerminal},
@@ -16,11 +18,11 @@ pub struct Size {
 
 pub struct Terminal {
     size: Size,
-    _stdout: RawTerminal<std::io::Stdout>,
+    _stdout: RawTerminal<Stdout>,
 }
 
 impl Terminal {
-    pub fn default() -> Result<Self, std::io::Error> {
+    pub fn default() -> Result<Self, Error> {
         let size = termion::terminal_size()?;
         Ok(Self {
             size: Size {
@@ -32,11 +34,11 @@ impl Terminal {
     }
 
     pub fn clear_screen() {
-        print!("{}", termion::clear::All);
+        print!("{}", All);
     }
 
     pub fn clear_current_line() {
-        print!("{}", termion::clear::CurrentLine);
+        print!("{}", CurrentLine);
     }
 
     pub fn set_bg_color(color: color::Rgb) {
@@ -48,11 +50,11 @@ impl Terminal {
     }
 
     pub fn set_fg_color(color: color::Rgb) {
-        print!("{}", color::Fg(color))
+        print!("{}", color::Fg(color));
     }
 
     pub fn reset_fg_color() {
-        print!("{}", color::Fg(color::Reset))
+        print!("{}", color::Fg(color::Reset));
     }
 
     pub fn cursor_position(position: &Position) {
@@ -62,10 +64,10 @@ impl Terminal {
 
         let x = x as u16;
         let y = y as u16;
-        print!("{}", termion::cursor::Goto(x, y));
+        print!("{}", Goto(x, y));
     }
 
-    pub fn flush() -> Result<(), std::io::Error> {
+    pub fn flush() -> Result<(), Error> {
         stdout().flush()
     }
 
@@ -74,14 +76,14 @@ impl Terminal {
     }
 
     pub fn cursor_hide() {
-        print!("{}", termion::cursor::Hide);
+        print!("{Hide}");
     }
 
     pub fn cursor_show() {
-        print!("{}", termion::cursor::Show);
+        print!("{Show}");
     }
 
-    pub fn read_key() -> Result<Key, std::io::Error> {
+    pub fn read_key() -> Result<Key, Error> {
         loop {
             if let Some(key) = stdin().lock().keys().next() {
                 return key;
